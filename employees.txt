@@ -1,0 +1,1 @@
+Employee: h | Salary: 1.0
