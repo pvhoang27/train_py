@@ -1,15 +1,16 @@
-from fastapi import FastAPI, HTTPException, status, Depends, Query, Path
+from fastapi import FastAPI, HTTPException, status, Depends, Query, Path, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from pydantic import BaseModel
 from typing import List, Optional
+import asyncio
 
 import models
 from database import get_db
 import security
 
-app = FastAPI(title="Blog Cá Nhân API - Day 6 (Auth & JWT)")
+app = FastAPI(title="Blog Cá Nhân API - Day 7 (Mini Project 1)")
 
 # ==========================================
 # 1. PYDANTIC SCHEMAS
@@ -41,11 +42,26 @@ class Token(BaseModel):
 
 
 # ==========================================
+# BACKGROUND TASK
+# ==========================================
+def send_welcome_email(username: str):
+    """Hàm giả lập việc gửi email tốn thời gian"""
+    # Ghi log ra file để chứng minh task đã chạy ngầm
+    with open("email_logs.txt", "a", encoding="utf-8") as f:
+        f.write(f"Đã gửi email chào mừng tới user: {username}\n")
+    print(f"Background Task: Đã hoàn tất gửi email cho {username}")
+
+
+# ==========================================
 # 2. AUTH (REGISTER / LOGIN)
 # ==========================================
 
 @app.post("/register", status_code=status.HTTP_201_CREATED)
-async def register_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
+async def register_user(
+    user: UserCreate, 
+    background_tasks: BackgroundTasks, # Khai báo BackgroundTasks
+    db: AsyncSession = Depends(get_db)
+):
     query = select(models.User).where(models.User.username == user.username)
     result = await db.execute(query)
 
@@ -62,7 +78,10 @@ async def register_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
     db.add(new_user)
     await db.commit()
 
-    return {"message": "Đăng ký thành công!"}
+    # Thêm task gửi email vào Background (chạy ngầm sau khi API trả response)
+    background_tasks.add_task(send_welcome_email, user.username)
+
+    return {"message": "Đăng ký thành công! Email chào mừng đang được gửi ở chế độ nền."}
 
 
 @app.post("/login", response_model=Token)

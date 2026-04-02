@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+sqlalchemy
+aiomysql
+pydantic
+python-dotenv
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart
+alembic
+greenlet
+passlib
+bcrypt==4.0.1

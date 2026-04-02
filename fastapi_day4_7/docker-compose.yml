@@ -1,0 +1,32 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: fastapi_mysql
+    restart: always
+    environment:
+      # Lấy mật khẩu từ file .env (biến DB_PASS)
+      MYSQL_ROOT_PASSWORD: ${DB_PASS}
+      MYSQL_DATABASE: fastapi_blog
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  web:
+    build: .
+    container_name: fastapi_web
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      # Truyền các biến từ .env vào container
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      # Ghi đè DB_HOST thành 'db' thay vì 127.0.0.1 để web kết nối được với container db
+      DB_HOST: db 
+      DB_PORT: ${DB_PORT}
+    depends_on:
+      - db
+
+volumes:
+  mysql_data:
