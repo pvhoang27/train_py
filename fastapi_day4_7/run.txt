@@ -1,0 +1,3 @@
+*day4
+cd fastapi_day4_7
+uvicorn main:app --reload
